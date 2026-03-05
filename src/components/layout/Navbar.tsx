@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, PawPrint } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,13 +17,23 @@ const links = [
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { pathname } = useLocation();
 
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+    <nav className={cn(
+      "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
+      scrolled ? "glass-strong shadow-lg shadow-background/50" : "bg-transparent"
+    )}>
       <div className="container mx-auto flex h-20 items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-2">
-          <PawPrint className="h-8 w-8 text-primary" />
+        <Link to="/" className="flex items-center gap-2 group">
+          <PawPrint className="h-7 w-7 text-primary group-hover:scale-110 transition-transform" />
           <span className="font-serif text-xl font-bold tracking-tight">
             Dr. <span className="text-gradient">MANIRAGUHA</span>
           </span>
@@ -36,15 +46,21 @@ export default function Navbar() {
               key={l.to}
               to={l.to}
               className={cn(
-                "rounded-md px-3 py-2 text-sm font-medium transition-colors hover:text-primary",
+                "relative rounded-md px-3 py-2 text-sm font-medium transition-colors hover:text-primary",
                 pathname === l.to ? "text-primary" : "text-muted-foreground"
               )}
             >
               {l.label}
+              {pathname === l.to && (
+                <motion.div
+                  layoutId="nav-indicator"
+                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-primary"
+                />
+              )}
             </Link>
           ))}
           <Link to="/appointments">
-            <Button size="sm" className="ml-4 gradient-primary font-semibold">
+            <Button size="sm" className="ml-4 gradient-primary font-semibold glow">
               Book Appointment
             </Button>
           </Link>
@@ -63,7 +79,7 @@ export default function Navbar() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden border-b border-border bg-background lg:hidden"
+            className="overflow-hidden glass-strong lg:hidden"
           >
             <div className="flex flex-col gap-1 px-4 py-4">
               {links.map((l) => (
